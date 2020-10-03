@@ -41,7 +41,7 @@ labels_df.sports.hist(xrot=90)
 ```
 
 ```{python}
-train_df, test_df = sklearn.model_selection.train_test_split(labels_df)
+train_df, val_df = sklearn.model_selection.train_test_split(labels_df)
 ```
 
 ```{python}
@@ -53,29 +53,29 @@ train_df.sports.hist(xrot=90)
 ```
 
 ```{python}
-test = test.sort_values(by='sports')
+val_df = val_df.sort_values(by='sports')
 ```
 
 ```{python}
-test.sports.hist(xrot=90)
+val_df.sports.hist(xrot=90)
 ```
 
 ```{python}
-train_df = train_df.sample(frac=1)
+train_df['is_valid'] = False
 ```
 
 ```{python}
-test = test.sample(frac=1)
+val_df['is_valid'] = True
 ```
 
 ```{python}
-train_df.head()
+train_val_df = pd.concat([train_df.sample(frac=1), val_df.sample(frac=1)])
 ```
 
 ```{python}
-test.head()
+train_val_df.to_csv(label_folder/'train_val_data.csv', index=False)
 ```
 
 ```{python}
-train_df.to_csv(label_folder/train_split.csv, index=F)
+
 ```

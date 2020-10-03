@@ -14,6 +14,26 @@ jupyter:
 
 ```{python}
 from fastai.vision.all import *
+import pandas as pd
+```
+
+```{python}
+path = Path('data')
+train_val_folder = get_image_files(path/"train")
+test_folder = get_image_files(path/"test")
+train_val_data = pd.read_csv(path/'train_val_data.csv')
+```
+
+```{python}
+train_val_data.head()
+```
+
+```{python}
+dls = ImageDataLoaders.from_df(train_val_data, folder='data', valid_col='is_valid')
+```
+
+```{python}
+dls.show_batch()
 ```
 
 ```{python}
