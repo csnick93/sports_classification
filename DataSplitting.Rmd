@@ -20,6 +20,10 @@ from sklearn import model_selection
 ```
 
 ```{python}
+from fastai.vision.all import *
+```
+
+```{python}
 label_folder = pathlib.Path('data')
 label_file = label_folder/'train_labels.csv'
 ```
@@ -33,6 +37,10 @@ labels_df.head()
 ```
 
 ```{python}
+labels_df.image = labels_df.image.apply(lambda x : x[2:])
+```
+
+```{python}
 labels_df = labels_df.sort_values(by='sports')
 ```
 
@@ -41,7 +49,7 @@ labels_df.sports.hist(xrot=90)
 ```
 
 ```{python}
-train_df, val_df = sklearn.model_selection.train_test_split(labels_df)
+train_df, val_df = model_selection.train_test_split(labels_df)
 ```
 
 ```{python}
@@ -74,8 +82,4 @@ train_val_df = pd.concat([train_df.sample(frac=1), val_df.sample(frac=1)])
 
 ```{python}
 train_val_df.to_csv(label_folder/'train_val_data.csv', index=False)
-```
-
-```{python}
-
 ```

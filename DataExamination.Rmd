@@ -20,14 +20,22 @@ import os
 
 ```{python}
 path = Path('data')
-```
-
-```{python}
-len(os.listdir(path/'train'))
+train_path = path/'train'
+test_path = path/'test'
 ```
 
 # Check the image dimensions
 
 ```{python}
-train_shapes = []
+train_shapes = [Image.open(train_path/f).size for f in os.listdir(train_path)]
+```
+
+```{python}
+len(set(train_shapes))
+```
+
+Very different image dimensions, need to be resized on training.
+
+```{python}
+
 ```

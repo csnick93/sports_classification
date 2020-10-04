@@ -14,8 +14,11 @@ jupyter:
 
 ```{python}
 from fastai.vision.all import *
+from fastai.data.all import *
 import pandas as pd
 ```
+
+# Load data
 
 ```{python}
 path = Path('data')
@@ -29,11 +32,31 @@ train_val_data.head()
 ```
 
 ```{python}
-dls = ImageDataLoaders.from_df(train_val_data, folder='data', valid_col='is_valid')
+data_block = DataBlock(blocks=(ImageBlock, CategoryBlock),
+                       splitter=ColSplitter(),
+                       get_x=ColReader(0, pref='data/'),
+                       get_y=ColReader(1),
+                       item_tfms=Resize(224),
+                       #batch_tfms=aug_transforms()
+                      )
+```
+
+```{python}
+dls = data_block.dataloaders(train_val_data, bs=1)
 ```
 
 ```{python}
 dls.show_batch()
+```
+
+# Finetune pretrained Resnet
+
+```{python}
+learn = cnn_learner(dls, resnet18, metrics=error_rate)
+```
+
+```{python}
+learn.lr_find()
 ```
 
 ```{python}
