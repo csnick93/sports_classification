@@ -83,3 +83,25 @@ train_val_df = pd.concat([train_df.sample(frac=1), val_df.sample(frac=1)])
 ```{python}
 train_val_df.to_csv(label_folder/'train_val_data.csv', index=False)
 ```
+
+# Produce a meaningful subset of the data for faster iteration
+
+
+Use the following five classes:
+* tennis
+* ping pong
+* basketball
+* badminton
+* motogp
+
+```{python}
+sports_to_keep = ['tennis', 'table_tennis', 'basketball', 'badminton', 'motogp']
+```
+
+```{python}
+labels_df = labels_df[labels_df.sports.isin(sports_to_keep) ]
+```
+
+```{python}
+
+```
