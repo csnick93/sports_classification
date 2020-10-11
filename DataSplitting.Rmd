@@ -99,7 +99,37 @@ sports_to_keep = ['tennis', 'table_tennis', 'basketball', 'badminton', 'motogp']
 ```
 
 ```{python}
-labels_df = labels_df[labels_df.sports.isin(sports_to_keep) ]
+subset_labels_df = labels_df[labels_df.sports.isin(sports_to_keep) ]
+```
+
+```{python}
+subset_train_df, subset_val_df = model_selection.train_test_split(subset_labels_df)
+```
+
+```{python}
+subset_train_df = subset_train_df.sort_values(by='sports')
+```
+
+```{python}
+subset_train_df.sports.hist(xrot=90)
+```
+
+```{python}
+subset_val_df = subset_val_df.sort_values(by='sports')
+```
+
+```{python}
+subset_val_df.sports.hist(xrot=90)
+```
+
+```{python}
+subset_train_df['is_valid'] = False
+subset_val_df['is_valid'] = True
+subset_train_val_df = pd.concat([subset_train_df.sample(frac=1), subset_val_df.sample(frac=1)])
+```
+
+```{python}
+subset_train_val_df.to_csv(label_folder/'subset_train_val_data.csv', index=False)
 ```
 
 ```{python}
