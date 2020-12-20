@@ -1,0 +1,238 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.7.1
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+import onnx # import onnx before torch to avoid segmentation fault
+import onnxruntime
+import io
+import numpy as np
+from PIL import Image
+import numpy as np
+import cv2
+```
+
+```{python}
+import fastai
+from fastai import learner
+import torch
+```
+
+```{python}
+sports_classifier = learner.load_learner('/home/nick/sports_classifier.pkl')
+```
+
+```{python}
+im_file = '/home/nick/Pictures/inp_im_9.jpg'
+```
+
+```{python}
+im = Image.open(im_file)
+```
+
+```{python}
+np.array(im).shape
+```
+
+```{python}
+np.array(im)[0,0]
+```
+
+```{python}
+im_cv = cv2.imread(im_file)[...,[2,1,0]]
+```
+
+```{python}
+im_cv[0,0]
+```
+
+# Inference using fastai
+
+```{python}
+sports_classifier.predict(im_file)
+```
+
+## Understand preprocessing
+
+```{python}
+sports_classifier.dls.vocab
+```
+
+```{python}
+sports_classifier.dls[0].after_item
+```
+
+```{python}
+sports_classifier.dls[0].before_batch
+```
+
+```{python}
+sports_classifier.dls[0].after_batch
+```
+
+## Running an image through the test_dl for reference
+
+```{python}
+from fastai.data.all import *
+```
+
+```{python}
+test_dl = sports_classifier.dls.test_dl([Path('/home/nick/Pictures/examples/inp_im_9.jpg')])
+```
+
+```{python}
+fastai_inp, =first(test_dl)
+```
+
+```{python}
+fastai_inp.numpy().shape
+```
+
+# Producing same results using torch
+
+
+## Reproducing preprocessing
+
+```{python}
+im_np = np.array(im)
+```
+
+```{python}
+im_np.shape
+```
+
+```{python}
+mean = np.array([0.4850,0.4560, 0.4060])
+std = np.array([0.2290,0.2240,0.2250])
+```
+
+```{python}
+im_norm = ((im_np/255) - mean)/std
+```
+
+```{python}
+im_norm_r = np.expand_dims(np.transpose(im_norm, axes=(2,0,1)), 0)
+```
+
+```{python}
+im_norm_r[0,:,50,120]
+```
+
+```{python}
+fastai_inp.numpy()[0,:,50,120]
+```
+
+```{python}
+diff = np.abs(fastai_inp.numpy() - im_norm_r)[0,0]
+```
+
+```{python}
+np.mean(diff)
+```
+
+```{python}
+diff.shape
+```
+
+```{python}
+import matplotlib.pyplot as plt
+```
+
+```{python}
+plt.imshow(diff)
+```
+
+## Perform the inference
+
+```{python}
+im_tensor = torch.from_numpy(im_norm_r).type(torch.float32)  # fastai_inp.numpy()
+```
+
+```{python}
+model = sports_classifier.model
+```
+
+```{python}
+model = model.eval()
+```
+
+```{python}
+with torch.no_grad():
+    result = model(im_tensor)
+```
+
+```{python}
+# tensor([1.8086e-07, 2.2261e-09, 8.9589e-10, 2.8020e-07, 1.0000e+00]
+result_np = result.numpy()[0]
+```
+
+```{python}
+result_np
+```
+
+```{python}
+np.exp(result_np) / np.sum(np.exp(result_np))
+```
+
+# Producing same results using onnx
+
+
+## convert the model to onnx
+
+```{python}
+torch.onnx.export(model,               # model being run
+                  im_tensor,                         # model input (or a tuple for multiple inputs)
+                  "sports_classification.onnx",   # where to save the model (can be a file or file-like object)
+                  export_params=True,        # store the trained parameter weights inside the model file
+                  opset_version=10,          # the ONNX version to export the model to
+                  do_constant_folding=True,  # whether to execute constant folding for optimization
+                  input_names = ['input'],   # the model's input names
+                  output_names = ['output'], # the model's output names
+                  dynamic_axes={'input' : {0 : 'batch_size'},    # variable lenght axes -> i.e. variable batch size
+                                'output' : {0 : 'batch_size'}})
+```
+
+```{python}
+onnx_model = onnx.load("sports_classification.onnx")
+```
+
+```{python}
+onnx.checker.check_model(onnx_model)
+```
+
+## Perform inference
+
+```{python}
+ort_session = onnxruntime.InferenceSession("sports_classification.onnx")
+```
+
+```{python}
+type(ort_session)
+```
+
+```{python}
+onnxruntime.InferenceSession
+```
+
+```{python}
+ort_inputs = {ort_session.get_inputs()[0].name: im_tensor.numpy()}
+ort_outs = ort_session.run(None, ort_inputs)
+```
+
+```{python}
+ort_outs[0]
+```
+
+```{python}
+
+```
