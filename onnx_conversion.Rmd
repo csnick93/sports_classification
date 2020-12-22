@@ -225,7 +225,15 @@ onnxruntime.InferenceSession
 ```
 
 ```{python}
-ort_inputs = {ort_session.get_inputs()[0].name: im_tensor.numpy()}
+input_im = im_tensor.numpy()
+```
+
+```{python}
+onnx_input = np.transpose(input_im[0], (1,2,0))
+```
+
+```{python}
+ort_inputs = {ort_session.get_inputs()[0].name: onnx_input}
 ort_outs = ort_session.run(None, ort_inputs)
 ```
 
